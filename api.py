@@ -13,6 +13,13 @@ from pydantic import BaseModel, Field
 from db import DB, MESSAGE_MAX, NAME_MAX
 
 STATIC_DIR = Path(__file__).parent / "static"
+ASSETS = ("style.css", "app.js")
+
+
+def _asset_version() -> str:
+    """정적 파일이 바뀌면 브라우저가 옛 캐시를 쓰지 않도록 붙이는 값."""
+    latest = max((STATIC_DIR / name).stat().st_mtime_ns for name in ASSETS)
+    return str(latest // 1_000_000_000)
 
 app = FastAPI(title="롤링페이퍼")
 db = DB()
@@ -85,6 +92,7 @@ def index() -> HTMLResponse:
         "couple": os.environ.get("PAPER_COUPLE", ""),
         "date": os.environ.get("PAPER_DATE", ""),
         "count": str(len(db.list_notes())),
+        "v": _asset_version(),
     }
     html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
     for key, value in fields.items():
