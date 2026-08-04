@@ -267,7 +267,7 @@ body {
   to   { opacity: 1; }
 }
 
-/* ── 빈 상태 · 푸터 ───────────────────────────────────────────────── */
+/* ── 빈 상태 ──────────────────────────────────────────────────────── */
 
 .empty {
   position: relative;
@@ -278,20 +278,6 @@ body {
   line-height: 2;
   padding: 40px 20px 120px;
   margin: 0;
-}
-
-.foot {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding: 0 20px 120px;
-  margin: 0;
-}
-.foot p {
-  margin: 0;
-  font-family: var(--font-title);
-  font-size: 13px;
-  color: var(--ink-faint);
 }
 
 /* ── 작성 버튼 ────────────────────────────────────────────────────── */
