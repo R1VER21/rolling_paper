@@ -112,17 +112,9 @@ body {
 .hero__date:empty { display: none; }
 
 .hero__rule {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
   margin: 28px auto 18px;
+  width: 100%;
   max-width: 260px;
-  color: var(--accent-soft);
-  font-size: 13px;
-}
-.hero__rule span {
-  flex: 1;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--line), transparent);
 }
@@ -486,9 +478,15 @@ body {
   background: rgba(75, 62, 51, .94);
   border-radius: 999px;
   box-shadow: 0 10px 28px rgba(60, 45, 30, .3);
-  animation: pop .24s cubic-bezier(.2, .8, .3, 1) both;
+  /* 공용 pop은 끝 프레임이 transform:none이라 가운데 정렬이 풀린다 */
+  animation: toast-in .24s cubic-bezier(.2, .8, .3, 1) both;
 }
 .toast[hidden] { display: none; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 12px) scale(.98); }
+  to   { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
