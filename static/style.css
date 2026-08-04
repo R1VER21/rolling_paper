@@ -359,7 +359,6 @@ body {
   box-shadow: 0 24px 60px rgba(80, 60, 40, .28);
   animation: pop .26s cubic-bezier(.2, .8, .3, 1) both;
 }
-.sheet--sm { max-width: 360px; }
 
 @keyframes pop {
   from { opacity: 0; transform: translateY(16px) scale(.98); }
@@ -391,13 +390,6 @@ body {
   color: var(--ink);
 }
 
-.sheet__desc {
-  margin: 0 0 20px;
-  font-size: 13px;
-  text-align: center;
-  color: var(--ink-soft);
-}
-
 .sheet__title + form { margin-top: 22px; }
 
 /* ── 입력 필드 ────────────────────────────────────────────────────── */
@@ -414,8 +406,7 @@ body {
   color: var(--ink-soft);
 }
 
-.field__counter,
-.field__hint {
+.field__counter {
   font-style: normal;
   font-size: 11px;
   color: var(--ink-faint);
@@ -445,13 +436,6 @@ body {
   resize: vertical;
   min-height: 130px;
   line-height: 1.8;
-}
-
-.field__input--pin {
-  letter-spacing: .5em;
-  text-align: center;
-  font-size: 18px;
-  padding-inline: 10px;
 }
 
 .form-error {

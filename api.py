@@ -21,22 +21,9 @@ db = DB()
 # 스키마
 # ══════════════════════════════════════════════════════════════════════════════
 
-class NoteCreate(BaseModel):
+class NotePayload(BaseModel):
     name: str = Field(min_length=1, max_length=NAME_MAX)
     message: str = Field(min_length=1, max_length=MESSAGE_MAX)
-    pin: str = Field(min_length=4, max_length=4, pattern=r"^\d{4}$")
-
-
-class NoteUpdate(BaseModel):
-    name: str = Field(min_length=1, max_length=NAME_MAX)
-    message: str = Field(min_length=1, max_length=MESSAGE_MAX)
-    pin: str | None = Field(default=None, pattern=r"^\d{4}$")
-    token: str | None = None
-
-
-class NoteAuth(BaseModel):
-    pin: str | None = Field(default=None, pattern=r"^\d{4}$")
-    token: str | None = None
 
 
 def _clean(text: str) -> str:
@@ -69,42 +56,27 @@ def list_messages() -> dict:
 
 
 @app.post("/api/messages", status_code=201)
-def create_message(payload: NoteCreate) -> dict:
+def create_message(payload: NotePayload) -> dict:
     name, message = _clean(payload.name), _clean(payload.message)
     if not name or not message:
         raise HTTPException(400, "이름과 메시지를 입력해 주세요.")
-    note, token = db.create(name, message, payload.pin)
-    return {"message": note.to_dict(), "token": token}
+    return {"message": db.create(name, message).to_dict()}
 
 
 @app.put("/api/messages/{note_id}")
-def update_message(note_id: int, payload: NoteUpdate) -> dict:
+def update_message(note_id: int, payload: NotePayload) -> dict:
     if not db.exists(note_id):
         raise HTTPException(404, "메시지를 찾을 수 없습니다.")
-    if not db.authorize(note_id, payload.pin, payload.token):
-        raise HTTPException(403, "비밀번호가 맞지 않습니다.")
     name, message = _clean(payload.name), _clean(payload.message)
     if not name or not message:
         raise HTTPException(400, "이름과 메시지를 입력해 주세요.")
-    note = db.update(note_id, name, message)
-    return {"message": note.to_dict()}
+    return {"message": db.update(note_id, name, message).to_dict()}
 
 
-@app.post("/api/messages/{note_id}/verify")
-def verify_message(note_id: int, payload: NoteAuth) -> dict:
+@app.delete("/api/messages/{note_id}")
+def delete_message(note_id: int) -> dict:
     if not db.exists(note_id):
         raise HTTPException(404, "메시지를 찾을 수 없습니다.")
-    if not db.authorize(note_id, payload.pin, payload.token):
-        raise HTTPException(403, "비밀번호가 맞지 않습니다.")
-    return {"ok": True}
-
-
-@app.post("/api/messages/{note_id}/delete")
-def delete_message(note_id: int, payload: NoteAuth) -> dict:
-    if not db.exists(note_id):
-        raise HTTPException(404, "메시지를 찾을 수 없습니다.")
-    if not db.authorize(note_id, payload.pin, payload.token):
-        raise HTTPException(403, "비밀번호가 맞지 않습니다.")
     db.delete(note_id)
     return {"ok": True}
 

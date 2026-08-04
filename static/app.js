@@ -2,7 +2,7 @@
    결혼 축하 롤링페이퍼
    ═══════════════════════════════════════════════════════════════════ */
 
-const TOKEN_KEY = 'rolling_paper_tokens';
+const MINE_KEY = 'rolling_paper_mine';
 const POLL_MS = 12000;
 
 const $ = (id) => document.getElementById(id);
@@ -24,56 +24,47 @@ const el = {
   fName: $('fName'),
   fMessage: $('fMessage'),
   msgLen: $('msgLen'),
-  pinField: $('pinField'),
-  fPin: $('fPin'),
   formError: $('formError'),
   btnSubmit: $('btnSubmit'),
   btnCancel: $('btnCancel'),
   btnDelete: $('btnDelete'),
 
-  pinOverlay: $('pinOverlay'),
-  pinForm: $('pinForm'),
-  fVerifyPin: $('fVerifyPin'),
-  pinError: $('pinError'),
-  pinClose: $('pinClose'),
-  pinCancel: $('pinCancel'),
-
   toast: $('toast'),
 };
 
-/** @type {{mode: 'create'|'edit', id: number|null, pin: string|null}} */
-let editing = { mode: 'create', id: null, pin: null };
+/** @type {{mode: 'create'|'edit', id: number|null}} */
+let editing = { mode: 'create', id: null };
 let notes = [];
 let renderedKey = '';
 let toastTimer = null;
 
-/* ── 내 메시지 토큰 ────────────────────────────────────────────────── */
+/* ── 내가 남긴 메시지 표시 (이 브라우저에서만 쓰는 목록) ──────────── */
 
-function readTokens() {
+function readMine() {
   try {
-    return JSON.parse(localStorage.getItem(TOKEN_KEY) || '{}');
+    const list = JSON.parse(localStorage.getItem(MINE_KEY) || '[]');
+    return Array.isArray(list) ? list : [];
   } catch {
-    return {};
+    return [];
   }
 }
 
-function saveToken(id, token) {
-  const tokens = readTokens();
-  tokens[id] = token;
+function writeMine(list) {
   try {
-    localStorage.setItem(TOKEN_KEY, JSON.stringify(tokens));
-  } catch { /* 저장 실패해도 비밀번호로 수정 가능 */ }
+    localStorage.setItem(MINE_KEY, JSON.stringify(list));
+  } catch { /* 표시용이라 실패해도 무방 */ }
 }
 
-function dropToken(id) {
-  const tokens = readTokens();
-  delete tokens[id];
-  try {
-    localStorage.setItem(TOKEN_KEY, JSON.stringify(tokens));
-  } catch { /* noop */ }
+function markMine(id) {
+  const list = readMine();
+  if (!list.includes(id)) writeMine([...list, id]);
 }
 
-const tokenOf = (id) => readTokens()[id] || null;
+function unmarkMine(id) {
+  writeMine(readMine().filter((x) => x !== id));
+}
+
+const isMine = (id) => readMine().includes(id);
 
 /* ── 통신 ─────────────────────────────────────────────────────────── */
 
@@ -114,7 +105,7 @@ function render() {
   el.empty.hidden = notes.length > 0;
 
   el.board.innerHTML = notes.map((n, i) => {
-    const mine = tokenOf(n.id) ? '<span class="note__mine">내 메시지</span>' : '';
+    const mine = isMine(n.id) ? '<span class="note__mine">내 메시지</span>' : '';
     return `
       <article class="note note--${n.color}" style="animation-delay:${Math.min(i, 12) * 40}ms">
         ${mine}
@@ -155,17 +146,15 @@ function toast(text) {
 
 /* ── 작성 · 수정 모달 ─────────────────────────────────────────────── */
 
-function openSheet(mode, note = null, pin = null) {
-  editing = { mode, id: note ? note.id : null, pin };
+function openSheet(mode, note = null) {
+  editing = { mode, id: note ? note.id : null };
 
   el.sheetTitle.textContent = mode === 'create' ? '축하 메시지 남기기' : '메시지 수정하기';
   el.btnSubmit.textContent = mode === 'create' ? '남기기' : '수정 완료';
   el.btnDelete.hidden = mode === 'create';
-  el.pinField.hidden = mode === 'edit';
 
   el.fName.value = note ? note.name : '';
   el.fMessage.value = note ? note.message : '';
-  el.fPin.value = '';
   el.msgLen.textContent = el.fMessage.value.length;
 
   el.formError.hidden = true;
@@ -175,7 +164,7 @@ function openSheet(mode, note = null, pin = null) {
 
 function closeSheet() {
   el.overlay.hidden = true;
-  editing = { mode: 'create', id: null, pin: null };
+  editing = { mode: 'create', id: null };
 }
 
 function showFormError(text) {
@@ -185,14 +174,6 @@ function showFormError(text) {
 
 el.fMessage.addEventListener('input', () => {
   el.msgLen.textContent = el.fMessage.value.length;
-});
-
-el.fPin.addEventListener('input', () => {
-  el.fPin.value = el.fPin.value.replace(/\D/g, '').slice(0, 4);
-});
-
-el.fVerifyPin.addEventListener('input', () => {
-  el.fVerifyPin.value = el.fVerifyPin.value.replace(/\D/g, '').slice(0, 4);
 });
 
 el.form.addEventListener('submit', async (e) => {
@@ -208,28 +189,18 @@ el.form.addEventListener('submit', async (e) => {
 
   try {
     if (editing.mode === 'create') {
-      const pin = el.fPin.value;
-      if (!/^\d{4}$/.test(pin)) {
-        showFormError('수정용 비밀번호를 숫자 4자리로 입력해 주세요.');
-        return;
-      }
       const data = await api('/api/messages', {
         method: 'POST',
-        body: JSON.stringify({ name, message, pin }),
+        body: JSON.stringify({ name, message }),
       });
-      saveToken(data.message.id, data.token);
+      markMine(data.message.id);
       closeSheet();
       await load();
       toast('축하 메시지를 남겼어요 ✿');
     } else {
       await api(`/api/messages/${editing.id}`, {
         method: 'PUT',
-        body: JSON.stringify({
-          name,
-          message,
-          pin: editing.pin,
-          token: tokenOf(editing.id),
-        }),
+        body: JSON.stringify({ name, message }),
       });
       closeSheet();
       await load();
@@ -246,13 +217,11 @@ el.btnDelete.addEventListener('click', async () => {
   if (!editing.id) return;
   if (!confirm('이 메시지를 삭제할까요? 되돌릴 수 없어요.')) return;
 
+  const id = editing.id;
   el.btnDelete.disabled = true;
   try {
-    await api(`/api/messages/${editing.id}/delete`, {
-      method: 'POST',
-      body: JSON.stringify({ pin: editing.pin, token: tokenOf(editing.id) }),
-    });
-    dropToken(editing.id);
+    await api(`/api/messages/${id}`, { method: 'DELETE' });
+    unmarkMine(id);
     closeSheet();
     await load();
     toast('메시지를 삭제했어요');
@@ -263,82 +232,31 @@ el.btnDelete.addEventListener('click', async () => {
   }
 });
 
-/* ── 비밀번호 확인 모달 ───────────────────────────────────────────── */
-
-let pendingId = null;
-
-function openPin(id) {
-  pendingId = id;
-  el.fVerifyPin.value = '';
-  el.pinError.hidden = true;
-  el.pinOverlay.hidden = false;
-  setTimeout(() => el.fVerifyPin.focus(), 60);
-}
-
-function closePin() {
-  el.pinOverlay.hidden = true;
-  pendingId = null;
-}
-
-el.pinForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const pin = el.fVerifyPin.value;
-  if (!/^\d{4}$/.test(pin)) {
-    el.pinError.textContent = '숫자 4자리를 입력해 주세요.';
-    el.pinError.hidden = false;
-    return;
-  }
-  try {
-    await api(`/api/messages/${pendingId}/verify`, {
-      method: 'POST',
-      body: JSON.stringify({ pin }),
-    });
-    const note = notes.find((n) => n.id === pendingId);
-    closePin();
-    if (note) openSheet('edit', note, pin);
-  } catch (err) {
-    el.pinError.textContent = err.message;
-    el.pinError.hidden = false;
-  }
-});
-
 /* ── 이벤트 연결 ──────────────────────────────────────────────────── */
 
 el.board.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-edit]');
   if (!btn) return;
-  const id = Number(btn.dataset.edit);
-  const note = notes.find((n) => n.id === id);
-  if (!note) return;
-
-  if (tokenOf(id)) openSheet('edit', note, null);
-  else openPin(id);
+  const note = notes.find((n) => n.id === Number(btn.dataset.edit));
+  if (note) openSheet('edit', note);
 });
 
 el.fab.addEventListener('click', () => openSheet('create'));
 el.sheetClose.addEventListener('click', closeSheet);
 el.btnCancel.addEventListener('click', closeSheet);
-el.pinClose.addEventListener('click', closePin);
-el.pinCancel.addEventListener('click', closePin);
 
 el.overlay.addEventListener('mousedown', (e) => {
   if (e.target === el.overlay) closeSheet();
 });
-el.pinOverlay.addEventListener('mousedown', (e) => {
-  if (e.target === el.pinOverlay) closePin();
-});
 
 document.addEventListener('keydown', (e) => {
-  if (e.key !== 'Escape') return;
-  if (!el.pinOverlay.hidden) closePin();
-  else if (!el.overlay.hidden) closeSheet();
+  if (e.key === 'Escape' && !el.overlay.hidden) closeSheet();
 });
 
 /* ── 자동 새로고침 ────────────────────────────────────────────────── */
 
 setInterval(() => {
-  const modalOpen = !el.overlay.hidden || !el.pinOverlay.hidden;
-  if (modalOpen || document.hidden) return;
+  if (!el.overlay.hidden || document.hidden) return;
   load().catch(() => { /* 네트워크 일시 오류는 조용히 무시 */ });
 }, POLL_MS);
 

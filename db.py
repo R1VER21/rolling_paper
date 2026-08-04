@@ -1,11 +1,9 @@
 """롤링페이퍼 저장소 — SQLite."""
 from __future__ import annotations
 
-import hashlib
 import os
 import sqlite3
 import threading
-import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -31,10 +29,6 @@ class Note:
         return asdict(self)
 
 
-def _hash_pin(pin: str, salt: str) -> str:
-    return hashlib.sha256(f"{salt}:{pin}".encode()).hexdigest()
-
-
 class DB:
     def __init__(self) -> None:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -53,15 +47,35 @@ class DB:
                     name       TEXT NOT NULL,
                     message    TEXT NOT NULL,
                     color      INTEGER NOT NULL DEFAULT 0,
-                    pin_salt   TEXT NOT NULL,
-                    pin_hash   TEXT NOT NULL,
-                    token      TEXT NOT NULL,
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 )
                 """
             )
+            self._migrate_drop_pin()
             self._conn.commit()
+
+    def _migrate_drop_pin(self) -> None:
+        """비밀번호 도입 이전 버전의 테이블에서 인증 컬럼을 걷어낸다."""
+        cols = {r["name"] for r in self._conn.execute("PRAGMA table_info(notes)")}
+        if "pin_hash" not in cols:
+            return
+        self._conn.executescript(
+            """
+            CREATE TABLE notes_new (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                name       TEXT NOT NULL,
+                message    TEXT NOT NULL,
+                color      INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            INSERT INTO notes_new (id, name, message, color, created_at, updated_at)
+                SELECT id, name, message, color, created_at, updated_at FROM notes;
+            DROP TABLE notes;
+            ALTER TABLE notes_new RENAME TO notes;
+            """
+        )
 
     # ──────────────────────────────────────────────────────────────────────
     # 조회
@@ -75,32 +89,36 @@ class DB:
             ).fetchall()
         return [Note(**dict(r)) for r in rows]
 
-    def _get_raw(self, note_id: int) -> sqlite3.Row | None:
+    def get(self, note_id: int) -> Note | None:
         with self._lock:
-            return self._conn.execute(
-                "SELECT * FROM notes WHERE id = ?", (note_id,)
+            row = self._conn.execute(
+                "SELECT id, name, message, color, created_at, updated_at "
+                "FROM notes WHERE id = ?",
+                (note_id,),
             ).fetchone()
+        return Note(**dict(row)) if row else None
+
+    def exists(self, note_id: int) -> bool:
+        return self.get(note_id) is not None
 
     # ──────────────────────────────────────────────────────────────────────
     # 쓰기
     # ──────────────────────────────────────────────────────────────────────
 
-    def create(self, name: str, message: str, pin: str) -> tuple[Note, str]:
+    def create(self, name: str, message: str) -> Note:
         now = datetime.now(timezone.utc).isoformat()
-        salt = uuid.uuid4().hex
-        token = uuid.uuid4().hex
         with self._lock:
             color = self._conn.execute(
                 "SELECT COUNT(*) FROM notes"
             ).fetchone()[0] % COLOR_COUNT
             cur = self._conn.execute(
-                "INSERT INTO notes (name, message, color, pin_salt, pin_hash, "
-                "token, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                (name, message, color, salt, _hash_pin(pin, salt), token, now, now),
+                "INSERT INTO notes (name, message, color, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (name, message, color, now, now),
             )
             self._conn.commit()
             note_id = cur.lastrowid
-        return Note(note_id, name, message, color, now, now), token
+        return Note(note_id, name, message, color, now, now)
 
     def update(self, note_id: int, name: str, message: str) -> Note | None:
         now = datetime.now(timezone.utc).isoformat()
@@ -110,33 +128,9 @@ class DB:
                 (name, message, now, note_id),
             )
             self._conn.commit()
-        row = self._get_raw(note_id)
-        if row is None:
-            return None
-        return Note(
-            row["id"], row["name"], row["message"], row["color"],
-            row["created_at"], row["updated_at"],
-        )
+        return self.get(note_id)
 
     def delete(self, note_id: int) -> None:
         with self._lock:
             self._conn.execute("DELETE FROM notes WHERE id = ?", (note_id,))
             self._conn.commit()
-
-    # ──────────────────────────────────────────────────────────────────────
-    # 권한
-    # ──────────────────────────────────────────────────────────────────────
-
-    def authorize(self, note_id: int, pin: str | None, token: str | None) -> bool:
-        """토큰(같은 브라우저) 또는 비밀번호가 맞으면 수정·삭제 허용."""
-        row = self._get_raw(note_id)
-        if row is None:
-            return False
-        if token and token == row["token"]:
-            return True
-        if pin and _hash_pin(pin, row["pin_salt"]) == row["pin_hash"]:
-            return True
-        return False
-
-    def exists(self, note_id: int) -> bool:
-        return self._get_raw(note_id) is not None

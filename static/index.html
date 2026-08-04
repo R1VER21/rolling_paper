@@ -58,39 +58,12 @@
                     maxlength="300" placeholder="두 사람에게 전하고 싶은 축하의 말을 적어주세요." required></textarea>
         </label>
 
-        <label class="field" id="pinField">
-          <span class="field__label">
-            수정용 비밀번호
-            <em class="field__hint">숫자 4자리 · 나중에 고칠 때 필요해요</em>
-          </span>
-          <input class="field__input field__input--pin" id="fPin" type="text"
-                 inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
-        </label>
-
         <p class="form-error" id="formError" hidden></p>
 
         <div class="sheet__actions">
           <button type="button" class="btn btn--ghost btn--danger" id="btnDelete" hidden>삭제</button>
           <button type="button" class="btn btn--ghost" id="btnCancel">취소</button>
           <button type="submit" class="btn btn--primary" id="btnSubmit">남기기</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ── 비밀번호 확인 모달 ─────────────────────────────────────────── -->
-  <div class="overlay" id="pinOverlay" hidden>
-    <div class="sheet sheet--sm" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
-      <button class="sheet__close" id="pinClose" type="button" aria-label="닫기">✕</button>
-      <h2 class="sheet__title" id="pinTitle">비밀번호 확인</h2>
-      <p class="sheet__desc">메시지를 남길 때 정한 숫자 4자리를 입력해 주세요.</p>
-      <form id="pinForm" novalidate>
-        <input class="field__input field__input--pin" id="fVerifyPin" type="text"
-               inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
-        <p class="form-error" id="pinError" hidden></p>
-        <div class="sheet__actions">
-          <button type="button" class="btn btn--ghost" id="pinCancel">취소</button>
-          <button type="submit" class="btn btn--primary">확인</button>
         </div>
       </form>
     </div>
