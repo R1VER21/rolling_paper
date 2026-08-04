@@ -1,12 +1,15 @@
 """롤링페이퍼 저장소 — SQLite."""
 from __future__ import annotations
 
+import logging
 import os
 import sqlite3
 import threading
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
+
+log = logging.getLogger("uvicorn.error")
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", Path(__file__).parent / "data"))
 DB_PATH = DATA_DIR / "rolling_paper.db"
@@ -32,6 +35,13 @@ class Note:
 class DB:
     def __init__(self) -> None:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
+        if not os.environ.get("DATA_DIR"):
+            log.warning(
+                "DATA_DIR가 설정되지 않아 %s에 저장합니다. "
+                "배포 환경이라면 영구 볼륨 경로를 DATA_DIR로 지정하세요. "
+                "그러지 않으면 재배포할 때 메시지가 모두 사라집니다.",
+                DATA_DIR,
+            )
         self._lock = threading.Lock()
         self._conn = sqlite3.connect(DB_PATH, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row

@@ -30,7 +30,19 @@ http://localhost:8000 접속.
 
 ## Railway 배포
 
-1. 이 폴더를 깃 저장소로 올리고 Railway에서 연결.
-2. `railway.toml`의 startCommand 그대로 사용.
-3. **Volume을 반드시 붙이고** `DATA_DIR`를 그 마운트 경로(예: `/data`)로 설정.
-   볼륨이 없으면 재배포할 때마다 메시지가 사라집니다.
+1. Railway에서 **New Project → Deploy from GitHub repo**로 이 저장소를 연결.
+   빌드·실행 설정은 `railway.toml`에 있으니 따로 만질 것 없음.
+2. 서비스 → **Variables**에서 `DATA_DIR = /data` 추가.
+   원하면 `PAPER_COUPLE`, `PAPER_DATE`도 여기서 설정.
+3. 서비스 → **Volumes → Add Volume**, 마운트 경로를 `/data`로 지정.
+   (2번의 `DATA_DIR`와 반드시 같은 경로여야 함)
+4. 서비스 → **Settings → Networking → Generate Domain**으로 주소 발급.
+
+`DATA_DIR`나 볼륨이 빠지면 재배포할 때마다 축하 메시지가 전부 사라집니다.
+설정이 누락된 경우 서버 시작 로그에 경고가 찍힙니다.
+
+## Vercel은 안 되나요
+
+안 됩니다. 서버리스 함수는 파일 시스템이 읽기 전용이고 `/tmp`는 인스턴스마다 따로
+존재해서, SQLite에 쌓은 메시지가 다른 방문자에게 보이지 않고 수시로 사라집니다.
+Vercel에 올리려면 Neon Postgres나 Turso 같은 외부 DB로 저장소를 바꿔야 합니다.
