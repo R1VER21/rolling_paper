@@ -204,6 +204,9 @@ body {
   color: var(--ink);
 }
 
+/* 배지는 absolute라 본문이 그 아래로 흘러든다. 배지가 있는 카드만 본문을 내림 */
+.note__mine + .note__msg { margin-top: 32px; }
+
 .note__foot {
   display: flex;
   align-items: flex-end;
