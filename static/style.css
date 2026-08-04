@@ -25,12 +25,17 @@
   --shadow:  0 2px 4px rgba(120, 95, 66, .06), 0 10px 24px rgba(120, 95, 66, .10);
   --shadow-lift: 0 6px 12px rgba(120, 95, 66, .10), 0 18px 40px rgba(120, 95, 66, .16);
 
-  --font-title: "Gowun Batang", serif;
-  --font-body:  "Gowun Dodum", system-ui, sans-serif;
-  --font-hand:  "Nanum Pen Script", cursive;
+  --font-stack: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
+                "Malgun Gothic", sans-serif;
+  --font-title: var(--font-stack);
+  --font-body:  var(--font-stack);
+  --font-hand:  var(--font-stack);
+
+  --tracking: -0.03em;
 }
 
-* { box-sizing: border-box; }
+/* 자간은 각 요소의 글자 크기 기준 -3%가 되도록 전역 지정 */
+* { box-sizing: border-box; letter-spacing: var(--tracking); }
 
 html { -webkit-text-size-adjust: 100%; }
 
@@ -76,8 +81,8 @@ body {
 .hero__eyebrow {
   margin: 0 0 14px;
   font-family: var(--font-hand);
-  font-size: 30px;
-  letter-spacing: .08em;
+  font-size: 20px;
+  font-weight: 600;
   color: var(--accent);
 }
 .hero__eyebrow:empty { display: none; }
@@ -87,7 +92,6 @@ body {
   font-family: var(--font-title);
   font-weight: 700;
   font-size: clamp(30px, 6.4vw, 46px);
-  letter-spacing: -.01em;
   color: var(--ink);
   text-shadow: 0 1px 0 rgba(255, 255, 255, .7);
 }
@@ -103,7 +107,6 @@ body {
   margin: 12px 0 0;
   font-family: var(--font-title);
   font-size: 14px;
-  letter-spacing: .18em;
   color: var(--ink-faint);
 }
 .hero__date:empty { display: none; }
@@ -127,7 +130,6 @@ body {
 .hero__count {
   margin: 0;
   font-size: 13px;
-  letter-spacing: .02em;
   color: var(--ink-faint);
 }
 .hero__count b { color: var(--accent-deep); font-weight: 700; }
@@ -221,8 +223,9 @@ body {
 
 .note__name {
   font-family: var(--font-hand);
-  font-size: 25px;
-  line-height: 1.2;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
   color: var(--accent-deep);
   word-break: break-word;
 }
@@ -252,7 +255,6 @@ body {
   top: 14px;
   right: 14px;
   font-size: 11px;
-  letter-spacing: .04em;
   color: var(--accent);
   background: rgba(255, 255, 255, .72);
   border: 1px solid var(--accent-soft);
@@ -289,7 +291,6 @@ body {
   margin: 0;
   font-family: var(--font-title);
   font-size: 13px;
-  letter-spacing: .16em;
   color: var(--ink-faint);
 }
 

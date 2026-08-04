@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>결혼 축하 롤링페이퍼</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+  <title>{{title}} · 롤링페이퍼</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <div class="paper-grain" aria-hidden="true"></div>
 
   <header class="hero">
-    <p class="hero__eyebrow" id="heroCouple"></p>
-    <h1 class="hero__title" id="heroTitle">결혼을 축하합니다</h1>
-    <p class="hero__sub" id="heroSub">두 사람의 새로운 시작에 따뜻한 한마디를 남겨주세요</p>
-    <p class="hero__date" id="heroDate"></p>
+    <p class="hero__eyebrow" id="heroCouple">{{couple}}</p>
+    <h1 class="hero__title" id="heroTitle">{{title}}</h1>
+    <p class="hero__sub" id="heroSub">{{subtitle}}</p>
+    <p class="hero__date" id="heroDate">{{date}}</p>
     <div class="hero__rule" aria-hidden="true"><span></span>❦<span></span></div>
-    <p class="hero__count"><b id="noteCount">0</b>개의 축하 메시지가 모였어요</p>
+    <p class="hero__count"><b id="noteCount">{{count}}</b>개의 축하 메시지가 모였어요</p>
   </header>
 
   <main class="board" id="board" aria-live="polite"></main>

@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import os
+from html import escape
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -33,21 +34,6 @@ def _clean(text: str) -> str:
 # ══════════════════════════════════════════════════════════════════════════════
 # 엔드포인트
 # ══════════════════════════════════════════════════════════════════════════════
-
-@app.get("/api/config")
-def get_config() -> dict:
-    """제목·부제는 환경변수로 바꿀 수 있다 (Railway Variables)."""
-    return {
-        "title": os.environ.get("PAPER_TITLE", "결혼을 축하합니다"),
-        "subtitle": os.environ.get(
-            "PAPER_SUBTITLE", "두 사람의 새로운 시작에 따뜻한 한마디를 남겨주세요"
-        ),
-        "couple": os.environ.get("PAPER_COUPLE", ""),
-        "date": os.environ.get("PAPER_DATE", ""),
-        "name_max": NAME_MAX,
-        "message_max": MESSAGE_MAX,
-    }
-
 
 @app.get("/api/messages")
 def list_messages() -> dict:
@@ -82,12 +68,28 @@ def delete_message(note_id: int) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 정적 파일
+# 페이지 — 문구를 환경변수로 채워서 내보낸다 (Railway Variables)
 # ══════════════════════════════════════════════════════════════════════════════
 
-@app.get("/")
-def index() -> FileResponse:
-    return FileResponse(STATIC_DIR / "index.html")
+@app.get("/", response_class=HTMLResponse)
+def index() -> HTMLResponse:
+    """첫 화면부터 설정한 문구가 보이도록 서버에서 치환한다.
+
+    JS로 나중에 덮어쓰면 새로고침 직후 잠깐 기본 문구가 보이기 때문.
+    """
+    fields = {
+        "title": os.environ.get("PAPER_TITLE", "결혼을 축하합니다"),
+        "subtitle": os.environ.get(
+            "PAPER_SUBTITLE", "두 사람의 새로운 시작에 따뜻한 한마디를 남겨주세요"
+        ),
+        "couple": os.environ.get("PAPER_COUPLE", ""),
+        "date": os.environ.get("PAPER_DATE", ""),
+        "count": str(len(db.list_notes())),
+    }
+    html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    for key, value in fields.items():
+        html = html.replace("{{" + key + "}}", escape(value.strip()))
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

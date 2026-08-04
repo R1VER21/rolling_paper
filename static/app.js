@@ -11,10 +11,6 @@ const el = {
   board: $('board'),
   empty: $('empty'),
   count: $('noteCount'),
-  heroTitle: $('heroTitle'),
-  heroSub: $('heroSub'),
-  heroCouple: $('heroCouple'),
-  heroDate: $('heroDate'),
 
   fab: $('fabWrite'),
   overlay: $('overlay'),
@@ -122,17 +118,6 @@ async function load() {
   const data = await api('/api/messages');
   notes = data.messages;
   render();
-}
-
-async function loadConfig() {
-  try {
-    const cfg = await api('/api/config');
-    document.title = `${cfg.title} · 롤링페이퍼`;
-    el.heroTitle.textContent = cfg.title;
-    el.heroSub.textContent = cfg.subtitle;
-    el.heroCouple.textContent = cfg.couple || '';
-    el.heroDate.textContent = cfg.date || '';
-  } catch { /* 기본 문구 유지 */ }
 }
 
 /* ── 토스트 ───────────────────────────────────────────────────────── */
@@ -266,5 +251,4 @@ document.addEventListener('visibilitychange', () => {
 
 /* ── 시작 ─────────────────────────────────────────────────────────── */
 
-loadConfig();
 load().catch(() => toast('메시지를 불러오지 못했어요'));
