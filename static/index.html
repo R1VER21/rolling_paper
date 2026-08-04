@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>결혼 축하 롤링페이퍼</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="paper-grain" aria-hidden="true"></div>
+
+  <header class="hero">
+    <p class="hero__eyebrow" id="heroCouple"></p>
+    <h1 class="hero__title" id="heroTitle">결혼을 축하합니다</h1>
+    <p class="hero__sub" id="heroSub">두 사람의 새로운 시작에 따뜻한 한마디를 남겨주세요</p>
+    <p class="hero__date" id="heroDate"></p>
+    <div class="hero__rule" aria-hidden="true"><span></span>❦<span></span></div>
+    <p class="hero__count"><b id="noteCount">0</b>개의 축하 메시지가 모였어요</p>
+  </header>
+
+  <main class="board" id="board" aria-live="polite"></main>
+
+  <p class="empty" id="empty" hidden>
+    아직 남겨진 메시지가 없어요.<br>첫 번째 축하를 남겨주세요 ✿
+  </p>
+
+  <footer class="foot">
+    <p>따뜻한 마음이 오래 머물기를</p>
+  </footer>
+
+  <button class="fab" id="fabWrite" type="button">
+    <span class="fab__plus" aria-hidden="true">✎</span>
+    <span>메시지 남기기</span>
+  </button>
+
+  <!-- ── 작성 / 수정 모달 ───────────────────────────────────────────── -->
+  <div class="overlay" id="overlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <button class="sheet__close" id="sheetClose" type="button" aria-label="닫기">✕</button>
+      <h2 class="sheet__title" id="sheetTitle">축하 메시지 남기기</h2>
+
+      <form id="noteForm" novalidate>
+        <label class="field">
+          <span class="field__label">이름</span>
+          <input class="field__input" id="fName" type="text" maxlength="20"
+                 placeholder="이름 또는 닉네임" autocomplete="off" required>
+        </label>
+
+        <label class="field">
+          <span class="field__label">
+            메시지
+            <em class="field__counter"><b id="msgLen">0</b>/300</em>
+          </span>
+          <textarea class="field__input field__input--area" id="fMessage" rows="6"
+                    maxlength="300" placeholder="두 사람에게 전하고 싶은 축하의 말을 적어주세요." required></textarea>
+        </label>
+
+        <label class="field" id="pinField">
+          <span class="field__label">
+            수정용 비밀번호
+            <em class="field__hint">숫자 4자리 · 나중에 고칠 때 필요해요</em>
+          </span>
+          <input class="field__input field__input--pin" id="fPin" type="text"
+                 inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+        </label>
+
+        <p class="form-error" id="formError" hidden></p>
+
+        <div class="sheet__actions">
+          <button type="button" class="btn btn--ghost btn--danger" id="btnDelete" hidden>삭제</button>
+          <button type="button" class="btn btn--ghost" id="btnCancel">취소</button>
+          <button type="submit" class="btn btn--primary" id="btnSubmit">남기기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── 비밀번호 확인 모달 ─────────────────────────────────────────── -->
+  <div class="overlay" id="pinOverlay" hidden>
+    <div class="sheet sheet--sm" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
+      <button class="sheet__close" id="pinClose" type="button" aria-label="닫기">✕</button>
+      <h2 class="sheet__title" id="pinTitle">비밀번호 확인</h2>
+      <p class="sheet__desc">메시지를 남길 때 정한 숫자 4자리를 입력해 주세요.</p>
+      <form id="pinForm" novalidate>
+        <input class="field__input field__input--pin" id="fVerifyPin" type="text"
+               inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+        <p class="form-error" id="pinError" hidden></p>
+        <div class="sheet__actions">
+          <button type="button" class="btn btn--ghost" id="pinCancel">취소</button>
+          <button type="submit" class="btn btn--primary">확인</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
