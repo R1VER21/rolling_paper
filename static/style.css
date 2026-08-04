@@ -251,7 +251,8 @@ body {
   background: rgba(255, 255, 255, .72);
   border: 1px solid var(--accent-soft);
   border-radius: 999px;
-  padding: 2px 9px;
+  padding: 5px 13px;
+  line-height: 1.4;
 }
 
 @keyframes rise {
